@@ -29,7 +29,7 @@ with open("listings.json", "r", encoding="utf-8") as f:
     listings_data = json.load(f)
 
 # Initialize FAISS vectorstore
-embeddings = OpenAIEmbeddings()
+embeddings = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
 vectorstore = FAISS.load_local(
     "guest_kb_vectorstore", embeddings, allow_dangerous_deserialization=True
 )
