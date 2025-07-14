@@ -12,6 +12,7 @@ from urllib.parse import quote
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 
+
 # Load environment variables
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
