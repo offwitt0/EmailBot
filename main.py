@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from urllib.parse import quote
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
+from openai import OpenAI
 
 
 # Load environment variables
@@ -29,7 +30,12 @@ with open("listings.json", "r", encoding="utf-8") as f:
     listings_data = json.load(f)
 
 # Initialize FAISS vectorstore
-embeddings = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise RuntimeError("❌ OPENAI_API_KEY is not set in environment variables.")
+
+# Force the key directly
+embeddings = OpenAIEmbeddings(api_key=api_key)
 vectorstore = FAISS.load_local(
     "guest_kb_vectorstore", embeddings, allow_dangerous_deserialization=True
 )
