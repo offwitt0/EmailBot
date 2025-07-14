@@ -1,0 +1,4 @@
+.env
+__pycache__/
+guest_kb_vectorstore/
+*.pyc
