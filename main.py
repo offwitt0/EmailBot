@@ -1,7 +1,6 @@
 import os
 import logging
 import json
-import openai
 import imaplib
 import smtplib
 import email
@@ -11,17 +10,15 @@ from dotenv import load_dotenv
 from urllib.parse import quote
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
-from openai import OpenAI
+load_dotenv()
 
 
 # Load environment variables
 load_dotenv()
+
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
-IMAP_SERVER = "imap.gmail.com"
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
 
 # Load listings
 with open("listings.json", "r", encoding="utf-8") as f:
@@ -29,11 +26,16 @@ with open("listings.json", "r", encoding="utf-8") as f:
 
 # Initialize FAISS vectorstore
 api_key = os.getenv("OPENAI_API_KEY")
-if not api_key:
+if not OPENAI_API_KEY:
     raise RuntimeError("❌ OPENAI_API_KEY is not set in environment variables.")
 
+# Email config
+IMAP_SERVER = "imap.gmail.com"
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+
 # Force the key directly
-embeddings = OpenAIEmbeddings(api_key=api_key)
+embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 vectorstore = FAISS.load_local(
     "guest_kb_vectorstore", embeddings, allow_dangerous_deserialization=True
 )
