@@ -1,5 +1,4 @@
 import os
-import logging
 import json
 import imaplib
 import smtplib
@@ -10,36 +9,34 @@ from dotenv import load_dotenv
 from urllib.parse import quote
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
+from openai import OpenAI  # ✅ Correct import for new OpenAI client
+
+# =================== Load environment variables ===================
 load_dotenv()
-
-
-# Load environment variables
-load_dotenv()
-
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
-
-# Load listings
-with open("listings.json", "r", encoding="utf-8") as f:
-    listings_data = json.load(f)
-
-# Initialize FAISS vectorstore
-api_key = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    raise RuntimeError("❌ OPENAI_API_KEY is not set in environment variables.")
-
-# Email config
 IMAP_SERVER = "imap.gmail.com"
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
-# Force the key directly
-embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
+if not OPENAI_API_KEY:
+    raise RuntimeError("❌ OPENAI_API_KEY is not set in environment variables.")
+
+# ✅ Create OpenAI v1 client
+client = OpenAI(api_key=OPENAI_API_KEY)
+
+# =================== Load Listings ===================
+with open("listings.json", "r", encoding="utf-8") as f:
+    listings_data = json.load(f)
+
+# =================== Load Knowledge Vectorstore ===================
+embeddings = OpenAIEmbeddings(api_key=OPENAI_API_KEY)
 vectorstore = FAISS.load_local(
     "guest_kb_vectorstore", embeddings, allow_dangerous_deserialization=True
 )
 
+# =================== Utility Functions ===================
 def generate_airbnb_link(area, checkin, checkout, adults=2, children=0, infants=0, pets=0):
     area_encoded = quote(area)
     return (
@@ -69,6 +66,7 @@ def find_matching_listings(city, guests):
             break
     return results
 
+# =================== Generate AI Response ===================
 def generate_response(user_message):
     today = datetime.today().date()
     checkin = today + timedelta(days=3)
@@ -87,7 +85,7 @@ def generate_response(user_message):
     listings = find_matching_listings("Cairo", 5)
     suggestions = "\n\nHere are some great options for you:\n" + "\n".join(listings) if listings else ""
 
-    response = openai.chat.completions.create(
+    response = client.chat.completions.create(  # ✅ Updated to use OpenAI v1 client
         model="gpt-3.5-turbo",
         messages=[
             {
@@ -101,6 +99,7 @@ def generate_response(user_message):
     )
     return response.choices[0].message.content.strip()
 
+# =================== Email Send/Receive ===================
 def send_email(to_email, subject, body):
     msg = EmailMessage()
     msg["From"] = EMAIL_ADDRESS
@@ -143,6 +142,7 @@ def check_email():
 
     mail.logout()
 
+# =================== Start Bot ===================
 if __name__ == "__main__":
     print("📧 Email bot started. Listening for new messages...")
     while True:
