@@ -23,8 +23,6 @@ IMAP_SERVER = "imap.gmail.com"
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
-openai.api_key = OPENAI_API_KEY
-
 # Load listings
 with open("listings.json", "r", encoding="utf-8") as f:
     listings_data = json.load(f)
